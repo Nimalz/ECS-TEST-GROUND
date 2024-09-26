@@ -2,43 +2,48 @@
 
 EntityManager::EntityManager()
 {
-	for (Entity entity = 0; entity < MAX_ENTITIES; ++entity)
-	{
-		mAvailableEntities.push(entity);
-	}
+
 }
 
-Entity EntityManager::CreateEntity()
+EntityID EntityManager::CreateEntity()
 {
-	assert(mLivingEntityCount < MAX_ENTITIES && "上限オーバー、エンティティ生成不能。");
+	assert(mEntities.size() < MAX_ENTITIES && "上限オーバー、エンティティ生成不能。");
 
-	Entity id = mAvailableEntities.front();
-	mAvailableEntities.pop();
-	++mLivingEntityCount;
+	if (!mRecycledEntity.empty())
+	{
+		EntityIndex index = Entity::GetIndex(mRecycledEntity.back());
+		EntityVersion version = Entity::GetVersion(mRecycledEntity.back()+1);
+		EntityID newID = Entity::CreateEntityID(index, version);
+		mRecycledEntity.pop_back();
+		mEntities[index].EnyityID = newID;
+		return newID;
+	}
+	
+	mEntities.push_back({ Entity::CreateEntityID(EntityIndex(mEntities.size()), 0), ComponentMask() });
 
-	return id;
+	return mEntities.back().EnyityID;
 }
 
-void EntityManager::DestroyEntity(Entity& entity)
+void EntityManager::DestroyEntity(EntityID& entity)
 {
 	assert(entity < MAX_ENTITIES && "インデックスオーバー、削除不能。");
 
-	mSignatures[entity].reset();
+	mComponemtMask[entity].reset();
 	mAvailableEntities.push(entity);
 	--mLivingEntityCount;
 }
 
-void  EntityManager::SetSignature(Entity entity, Signature signature)
+void  EntityManager::SetMask(EntityID entity, ComponentMask mask)
 {
 	assert(entity < MAX_ENTITIES && "インデックスオーバー、サイン生成不能。");
 
-	mSignatures[entity] = signature;
+	mComponemtMask[entity] = mask;
 }
 
 
-Signature EntityManager::GetSignature(Entity entity)
+ComponentMask EntityManager::GetMask(EntityID entity)
 {
 	assert(entity < MAX_ENTITIES && "インデックス、サインサクセス不能。");
 
-	return mSignatures[entity];
+	return mComponemtMask[entity];
 }

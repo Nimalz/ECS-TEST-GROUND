@@ -9,7 +9,7 @@ using EntityIndex = uint32_t;						//エンティティインデクス
 using EntityVersion = uint32_t;                     //バージョン情報
 using EntityID = uint64_t;                          //エンティティID
 
-const EntityID MAX_ENTITIES = 5000;					//エンティティ数上限
+const EntityIndex MAX_ENTITIES = 5000;				//エンティティ数上限
 using ComponentType = std::uint8_t;					//コンポーネントID
 const ComponentType MAX_COMPONENTS = 32;			//コンポーネント数上限
 using ComponentMask = std::bitset<MAX_COMPONENTS>;	//Bitset様式使用
@@ -45,20 +45,13 @@ namespace Entity
 
 namespace Component
 {
-    //ComponentTypeごとにComponentIDを生成
-    static uint32_t GenerateID()
-    {
-        static uint32_t value = 0;
-        return value++;
-    }
+    static uint32_t componentCounter = 0;
 
-    // テンプレ―ト特殊化でコンポーネントのタイプごとに個別のIDを生成
-    // 関数インスタンスごとにComponenntID静的変数が初期化されるため、
-    // 外部関数の静的変数として保存する
-    template<class T>
-    static uint32_t TypeID()
+    //コンポーネントのタイプごとにIDを生成
+    template<typename T>
+    static uint32_t GetID()
     {
-        static uint32_t ComponenntID = GenerateID();
+        static uint32_t ComponenntID = componentCounter++;
         return ComponenntID;
     }
 }

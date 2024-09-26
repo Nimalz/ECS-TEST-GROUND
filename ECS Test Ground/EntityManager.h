@@ -3,21 +3,24 @@
 #include "Types.h"
 #include <array>
 #include <cassert>
-#include <queue>
+#include <vector>
 
 
 class EntityManager
 {
 public:
+	struct EntityDesc
+	{
+		EntityID      EnyityID;
+		ComponentMask Mask;
+	};
+public:
 	EntityManager();
-	Entity CreateEntity();
-	void DestroyEntity(Entity& entity);
-	void SetSignature(Entity entity, Signature signature);
-	Signature GetSignature(Entity entity);
+	EntityID CreateEntity();
+	void DestroyEntity(EntityID& entity);
+	void SetMask(EntityID entity, ComponentMask signature);
+	ComponentMask GetMask(EntityID entity);
 private:
-	//未使用Entityのqueue
-	std::queue<Entity> mAvailableEntities{};
-	//
-	std::array<Signature, MAX_ENTITIES> mSignatures{};
-	uint32_t mLivingEntityCount{};
+	std::vector<EntityID> mRecycledEntity{};	//再使用可能のEntity Index及びVersion情報を保存
+	std::vector<EntityDesc> mEntities;
 };
