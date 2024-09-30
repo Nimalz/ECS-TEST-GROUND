@@ -1,49 +1,34 @@
 #include "EntityManager.h"
 
-EntityManager::EntityManager()
-{
-
-}
-
 EntityID EntityManager::CreateEntity()
 {
-	assert(mEntities.size() < MAX_ENTITIES && "上限オーバー、エンティティ生成不能。");
+	assert(mEntityDesc.size() < MAX_ENTITIES && "上限オーバー、エンティティ生成不能。");
 
-	if (!mRecycledEntity.empty())
+	//再利用可能のインデクスある場合
+	if (!mRecycledEntityIndex.empty())
 	{
-		EntityIndex index = Entity::GetIndex(mRecycledEntity.back());
-		EntityVersion version = Entity::GetVersion(mRecycledEntity.back()+1);
+		EntityIndex index = mRecycledEntityIndex.back();
+		EntityVersion version = Entity::GetVersion(mEntityDesc[index].EnyityID);
 		EntityID newID = Entity::CreateEntityID(index, version);
-		mRecycledEntity.pop_back();
-		mEntities[index].EnyityID = newID;
+		mRecycledEntityIndex.pop_back();
+		mEntityDesc[index].EnyityID = newID;
 		return newID;
 	}
 	
-	mEntities.push_back({ Entity::CreateEntityID(EntityIndex(mEntities.size()), 0), ComponentMask() });
+	mEntityDesc.push_back({ Entity::CreateEntityID(EntityIndex(mEntityDesc.size()), 0), ComponentMask() });
 
-	return mEntities.back().EnyityID;
+	return mEntityDesc.back().EnyityID;
 }
 
-void EntityManager::DestroyEntity(EntityID& entity)
+void EntityManager::DestroyEntity(EntityID entity)
 {
 	assert(entity < MAX_ENTITIES && "インデックスオーバー、削除不能。");
 
-	mComponemtMask[entity].reset();
-	mAvailableEntities.push(entity);
-	--mLivingEntityCount;
+	EntityID newID = Entity::CreateEntityID(EntityIndex(-1), Entity::GetVersion(entity) + 1);//Index部を-1にセット、Versionを更新
+	EntityIndex index = Entity::GetIndex(entity);
+
+	mEntityDesc[index].EnyityID = newID;
+	mEntityDesc[index].Mask.reset();		//不正アクセスを防ぐため、マスクをリセット
+	mRecycledEntityIndex.push_back(index);
 }
 
-void  EntityManager::SetMask(EntityID entity, ComponentMask mask)
-{
-	assert(entity < MAX_ENTITIES && "インデックスオーバー、サイン生成不能。");
-
-	mComponemtMask[entity] = mask;
-}
-
-
-ComponentMask EntityManager::GetMask(EntityID entity)
-{
-	assert(entity < MAX_ENTITIES && "インデックス、サインサクセス不能。");
-
-	return mComponemtMask[entity];
-}

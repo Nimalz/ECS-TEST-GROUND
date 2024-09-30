@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Types.h"
-#include <array>
 #include <cassert>
 #include <vector>
 
@@ -15,12 +14,13 @@ public:
 		ComponentMask Mask;
 	};
 public:
-	EntityManager();
+	EntityManager()=default;
 	EntityID CreateEntity();
-	void DestroyEntity(EntityID& entity);
-	void SetMask(EntityID entity, ComponentMask signature);
-	ComponentMask GetMask(EntityID entity);
+	void DestroyEntity(EntityID entity);
+
+	friend class ComponentManager;
+
 private:
-	std::vector<EntityID> mRecycledEntity{};	//再使用可能のEntity Index及びVersion情報を保存
-	std::vector<EntityDesc> mEntities;
+	std::vector<EntityIndex> mRecycledEntityIndex{};	//再使用可能のEntity Index及びVersion情報を保存
+	std::vector<EntityDesc> mEntityDesc;
 };
